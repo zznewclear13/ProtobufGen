@@ -1,0 +1,74 @@
+#include "{{wrapperHeaderFile}}"
+#include "ProtoGen/ProtoFactory.h"
+
+{{protoClassName}} ProtoWrapper<{{sourceClassName}}>::ToProto(const {{sourceClassName}}& asset)
+{
+    {{protoClassName}} proto{};
+    {% if sourceParentName %}
+    *proto.mutable_parent() = ProtoWrapper<{{sourceParentName}}>::ToProto(static_cast<const {{sourceParentName}}&>(asset));
+    {% endif %}
+
+    {% for prop in propertyInfos %}
+    {% if prop.isMap %}
+    for (const auto& [key, value] : asset.{{prop.name}}) {
+        {% if prop.isBasic %}
+        (*proto.mutable_{{prop.name}}())[key] = value;
+        {% else %}
+        (*proto.mutable_{{prop.name}}())[key] = ProtoWrapper<{{prop.valueType}}>::ToProto(value);
+        {% endif %}
+    }
+    {% elif prop.isRepeated %}
+    for (const auto& item : asset.{{prop.name}}) {
+        {% if prop.isBasic %}
+        proto.add_{{prop.name}}(item);
+        {% else %}
+        *proto.add_{{prop.name}}() = ProtoWrapper<{{prop.valueType}}>::ToProto(item);
+        {% endif %}
+    }
+    {% else %}
+    {% if prop.isBasic %}
+    proto.set_{{prop.name}}(asset.{{prop.name}});
+    {% else %}
+    *proto.mutable_{{prop.name}}() = ProtoWrapper<{{prop.valueType}}>::ToProto(asset.{{prop.name}});
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+    return proto;
+}
+
+{{sourceClassName}} ProtoWrapper<{{sourceClassName}}>::FromProto(const {{protoClassName}}& proto)
+{
+    {{sourceClassName}} asset;
+    {% if sourceParentName %}
+    static_cast<{{sourceParentName}}&>(asset) = ProtoWrapper<{{sourceParentName}}>::FromProto(proto.parent());
+    {% endif %}
+
+    {% for prop in propertyInfos %}
+    {% if prop.isMap %}
+    asset.{{prop.name}}.clear();
+    for (const auto& [key, value] : proto.{{prop.name}}()) {
+        {% if prop.isBasic %}
+        asset.{{prop.name}}[key] = value;
+        {% else %}
+        asset.{{prop.name}}[key] = ProtoWrapper<{{prop.valueType}}>::FromProto(value);
+        {% endif %}
+    }
+    {% elif prop.isRepeated %}
+    asset.{{prop.name}}.clear();
+    for (const auto& item : proto.{{prop.name}}()) {
+        {% if prop.isBasic %}
+        asset.{{prop.name}}.push_back(item);
+        {% else %}
+        asset.{{prop.name}}.push_back(ProtoWrapper<{{prop.valueType}}>::FromProto(item));
+        {% endif %}
+    }
+    {% else %}
+    {% if prop.isBasic %}
+    asset.{{prop.name}} = proto.{{prop.name}}();
+    {% else %}
+    asset.{{prop.name}} = ProtoWrapper<{{prop.valueType}}>::FromProto(proto.{{prop.name}}());
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+    return asset;
+}

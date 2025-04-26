@@ -1,0 +1,12 @@
+binary/
+build/
+python/__pycache__
+
+source/ProtoGen/Generated/
+source/ProtoGen/Protos/
+source/ProtoGen/Wrapper/
+source/ProtoGen/ProtoGen.cache
+source/ProtoGen/Protos/ProtoGen.cache
+
+library/Debug/
+library/Release/

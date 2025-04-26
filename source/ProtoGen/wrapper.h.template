@@ -1,0 +1,13 @@
+#pragma once
+#include "ProtoGen/ProtoWrapper.h"
+
+#include "{{sourceHeaderFile}}"
+#include "{{protoHeaderFile}}"
+
+template<>
+struct ProtoWrapper<{{sourceClassName}}>
+{
+    using BindType = {{protoClassName}};
+    static {{protoClassName}} ToProto(const {{sourceClassName}}& asset);
+    static {{sourceClassName}} FromProto(const {{protoClassName}}& proto);
+};
