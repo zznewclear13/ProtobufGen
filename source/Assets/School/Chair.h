@@ -10,5 +10,5 @@ class Chair : public PROTO_PARENT(EntityAsset)
 public:
     PROTO_PROPERTY_START
     PROTO_STRING material{};
-    PROTO_PROPERTY_END
+    PROTO_PROPERTY_END   
 };

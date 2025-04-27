@@ -1,11 +1,8 @@
 #include <iostream>
+#include <unordered_map>
 
 #include "Core/FileSystem.h"
-
-#include "Assets/Person.h"
 #include "ProtoGen/ProtoFactory.h"
-
-#define TOGGLE 2
 
 int main(int argc, char* argv[])
 {
@@ -13,73 +10,61 @@ int main(int argc, char* argv[])
 
     std::cout << "Protobuff Code Generation Example." << std::endl;
     FileSystem::Get().Init(argc, argv);
-
-#if TOGGLE == 0
-    Person person{};
-    person.name = "玩家名字七个字";
-    person.age = 28;
-    std::cout << "Name: " << person.name << ", Age: " << person.age << std::endl;
-
-    std::string fullPath = (FileSystem::Get().GetFullPath("/")).string();
-    std::cout << "Full path: " << fullPath << std::endl;
-
-    std::string data = PersonWrapper::SerializeToBinary(person);
-    FileSystem::Get().EnsurePath("/");
-    PersonWrapper::SerializeToFile(person, "Person.pd");
-    std::cout << "Serialized Data: " << data << std::endl;
-
-    Person tempPerson = PersonWrapper::DeserializeFromFile("Person.pd");
-    std::cout << "Name: " << tempPerson.name << ", Age: " << tempPerson.age << std::endl;
-#elif TOGGLE == 1
-
-    PersonProto pp{};
-    pp.set_name("玩家名字七个字");
-    pp.set_age(28);
-    auto str = pp.SerializeAsString(); 
-    std::cout << "Serialized Data: " << str << std::endl;
-
-    auto fullPath = FileSystem::Get().GetFullPath("");
-    std::string fullPathStr = fullPath.string();
-    std::cout << "Full path: " << fullPathStr << std::endl;
     FileSystem::Get().EnsurePath("");
-    FileSystem::Get().Save("Person.pd", str);
 
-    PersonProto tempPP{};
-    bool success = tempPP.ParseFromString(str);
-    if (!success)
+    Student student1{};
+    student1.name = "张三";
+    student1.age = 18;
+    Student student2{};
+    student2.name = "Alice";
+    student2.age = 19;
+    Student student3{};
+    student3.name = "佐藤";
+    student3.age = 20;
+    Teacher teacher{};
+    teacher.name = "DeepSeek";
+    teacher.age = 30;
+    Desk desk{};
+    desk.name = "desk";
+    desk.material = "wood";
+    Chair chair1{};
+    chair1.name = "chair1";
+    chair1.material = "plastic";
+    Chair chair2{};
+    chair2.name = "chair2";
+    chair2.material = "plastic";
+    ClassRoom classRoom{};
+    classRoom.name = "ClassRoom";
+
+    std::unordered_map<int, Student> students{};
+    students[1] = student1;
+    students[2] = student2;
+    students[3] = student3;
+    classRoom.students = students;
+    classRoom.teacher = teacher;
+    classRoom.desks = std::vector<Desk>{ desk };
+    classRoom.chairs = std::vector<Chair>{ chair1, chair2 };
+
+    auto data = ProtoFactory<ClassRoom>::Serialize(classRoom);
+    std::stringstream ss;
+    ss << std::hex;
+    for (auto& c : data)
     {
-        throw new std::runtime_error("Ewwwwwwwwww");
+        ss << std::setw(2) << std::setfill('0') << (int)c;
     }
-    std::cout << "Name: " << tempPP.name() << ", Age: " << tempPP.age() << std::endl;
+    std::cout << "Serialized Data: " << ss.str() << std::endl;
+    std::string savedFileName = "ClassRoom.pd";
+    FileSystem::Get().Save(savedFileName, data);
 
-    std::string tempStr = FileSystem::Get().LoadBinary("Person.pd");
-    std::string_view strView = std::string_view(tempStr);
+    ClassRoom classRoomA = ProtoFactory<ClassRoom>::Deserialize(data);
+    classRoomA.name = "ClassRoom A";
+    classRoomA.Print();
 
-    PersonProto tempPPP{};
-    bool success2 = tempPPP.ParseFromArray(strView.data(), strView.size());
-    if (!success2)
-    {
-        throw new std::runtime_error("Ewwwwwwwwww");
-    }
-    std::cout << "Name: " << tempPPP.name() << ", Age: " << tempPPP.age() << std::endl;
-#else
-    Person person{};
-    person.age = 28;
-    person.name = "玩家名字七个字";
+    std::string dataB = FileSystem::Get().LoadBinary(savedFileName);
+    ClassRoom classRoomB = ProtoFactory<ClassRoom>::Deserialize(dataB);
+    classRoomB.name = "ClassRoom B";
+    classRoomB.Print();
 
-    auto data = ProtoFactory<Person>::Serialize(person);
-    std::cout << "Serialized Data: " << data << std::endl;
-    FileSystem::Get().EnsurePath("");
-    FileSystem::Get().Save("Person.pd", data);
-
-    Person newPerson = ProtoFactory<Person>::Deserialize(data);
-    std::cout << "Name: " << newPerson.name << ", Age: " << newPerson.age << std::endl;
-
-    std::string newData = FileSystem::Get().LoadBinary("Person.pd");
-    newPerson = ProtoFactory<Person>::Deserialize(newData);
-    std::cout << "Name: " << newPerson.name << ", Age: " << newPerson.age << std::endl;
-
-#endif
     FileSystem::Get().Cleanup();
     system("PAUSE");
     return 0;
