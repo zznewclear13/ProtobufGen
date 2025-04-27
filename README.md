@@ -20,7 +20,7 @@ cmake --build . --config Debug
 cmake --install . --prefix "../install/Debug" --config Debug
 ```
 
-2. 将编译好的Protobuf库添加到项目中。将protobuf/install/Release和protobuf/install/Debug文件夹及包含的内容放到ProtoGen/library/Release和ProtoGen/library/Debug文件夹中。
+2. 将编译好的Protobuf库添加到项目中。将protobuf/install/Release/lib和protobuf/install/Debug/lib里的内容放到ProtoGen/library/Release和ProtoGen/library/Debug文件夹中。
 
 3. 双击configure.bat文件，运行配置脚本。
 
@@ -47,11 +47,13 @@ cmake --install . --prefix "../install/Debug" --config Debug
 
 ## 调用方式
 
+序列化：
 ```
 Person person{};
 auto data = ProtoFactory<Person>::Serialize(person);
 FileSystem::Get().Save(fileName, data);
 ```
+反序列化：
 ```
 std::string data = FileSystem::Get().LoadBinary(fileName);
 Person person = ProtoFactory<Person>::Deserialize(data);
